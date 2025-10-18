@@ -1,76 +1,197 @@
 <!DOCTYPE html>
-<html lang="id">
+<html lang="en">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Live Timer Firebase</title>
+  <title>TIMER GALANG RAMBU ARWANI ⏱️</title>
+
+  <!-- Tailwind & Feather -->
   <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/feather-icons/dist/feather.min.js"></script>
+
+  <!-- Firebase -->
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-database-compat.js"></script>
+
+  <style>
+    @keyframes pulse {
+      0%, 100% { transform: scale(1); }
+      50% { transform: scale(1.05); }
+    }
+    .pulse-animation { animation: pulse 1.5s infinite; }
+
+    @keyframes shake {
+      0%, 100% { transform: translateX(0); }
+      25% { transform: translateX(-5px); }
+      75% { transform: translateX(5px); }
+    }
+    .shake-animation { animation: shake 0.5s 3; }
+
+    .timer-display {
+      font-family: 'Courier New', monospace;
+      letter-spacing: 2px;
+    }
+  </style>
 </head>
-<body class="flex flex-col items-center justify-center min-h-screen bg-gray-900 text-white">
-  <h1 class="text-3xl font-bold mb-6">Live Timer</h1>
-  <div id="timer" class="text-6xl font-mono mb-6">--:--</div>
-  <button id="resetBtn" class="bg-blue-600 px-4 py-2 rounded-lg hover:bg-blue-500">Reset Timer</button>
 
-  <script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-    import { getDatabase, ref, onValue, set } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
+<body class="bg-gray-100 dark:bg-gray-900 min-h-screen flex flex-col items-center justify-center p-4 transition-colors duration-300">
+  <div class="w-full max-w-md mx-auto">
+    <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-xl overflow-hidden transition-all duration-300">
+      
+      <!-- Header -->
+      <div class="bg-indigo-600 dark:bg-indigo-800 p-6 text-center">
+        <h1 class="text-2xl font-bold text-white">TIMER GALANG RAMBU ARWANI</h1>
+        <p class="text-indigo-100 mt-1">Shared real-time countdown</p>
+      </div>
+      
+      <!-- Timer Display -->
+      <div class="p-8 text-center">
+        <div id="timerDisplay" class="timer-display text-7xl font-bold text-gray-800 dark:text-white mb-6">15:00</div>
 
+        <!-- Controls -->
+        <div class="flex justify-center space-x-4 mb-8">
+          <button id="resetBtn" class="bg-gray-200 hover:bg-gray-300 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-800 dark:text-white px-6 py-3 rounded-full font-medium transition-all shadow-lg">
+            <i data-feather="refresh-cw" class="inline mr-2"></i> Reset
+          </button>
+          <button id="settingsBtn" class="bg-gray-200 hover:bg-gray-300 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-800 dark:text-white px-6 py-3 rounded-full font-medium transition-all shadow-lg">
+            <i data-feather="settings" class="inline mr-2"></i> Settings
+          </button>
+        </div>
+
+        <!-- Settings Panel -->
+        <div id="settingsPanel" class="bg-gray-50 dark:bg-gray-700 p-6 rounded-xl hidden">
+          <h3 class="text-lg font-semibold text-gray-800 dark:text-white mb-4">Timer Settings</h3>
+          <div class="flex items-center justify-between">
+            <label for="minutesInput" class="text-gray-700 dark:text-gray-300">Minutes:</label>
+            <input type="number" id="minutesInput" min="1" max="120" value="15" 
+              class="w-20 px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-800 text-gray-800 dark:text-white text-center">
+          </div>
+          <button id="setTimeBtn" class="mt-4 w-full bg-indigo-600 hover:bg-indigo-700 text-white py-2 rounded-md font-medium transition-all">
+            Set Time
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Alarm Sound -->
+  <audio id="alarmSound" src="https://actions.google.com/sounds/v1/alarms/alarm_clock.ogg" preload="auto"></audio>
+
+  <script>
+    // === 1️⃣ Firebase Setup ===
     const firebaseConfig = {
       apiKey: "ISI_APIKEY_KAMU",
       authDomain: "live-timer-819ec.firebaseapp.com",
       databaseURL: "https://live-timer-819ec-default-rtdb.asia-southeast1.firebasedatabase.app",
       projectId: "live-timer-819ec",
       storageBucket: "live-timer-819ec.appspot.com",
-      messagingSenderId: "XXXXXX",
-      appId: "XXXXXX"
+      messagingSenderId: "1025604126659",
+      appId: "1:1025604126659:web:2d5652951b24196a0f5f76"
     };
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.database();
+    const timerRef = db.ref("sharedTimer");
 
-    const app = initializeApp(firebaseConfig);
-    const db = getDatabase(app);
-    const timerRef = ref(db, "shardertimer");
+    // === 2️⃣ DOM Elements ===
+    const timerDisplay = document.getElementById('timerDisplay');
+    const resetBtn = document.getElementById('resetBtn');
+    const settingsBtn = document.getElementById('settingsBtn');
+    const settingsPanel = document.getElementById('settingsPanel');
+    const minutesInput = document.getElementById('minutesInput');
+    const setTimeBtn = document.getElementById('setTimeBtn');
+    const alarmSound = document.getElementById('alarmSound');
 
-    let countdownInterval;
+    let defaultTime = 15 * 60;
+    let localTimer = null;
+    let endTime = null;
+    let alarmPlayed = false;
 
-    onValue(timerRef, (snapshot) => {
-      const data = snapshot.val();
-      if (!data) return;
+    // === 3️⃣ Display Formatter ===
+    function updateDisplay(secondsLeft) {
+      const minutes = Math.floor(secondsLeft / 60);
+      const seconds = secondsLeft % 60;
+      timerDisplay.textContent = `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+    }
 
-      const endTime = data.endTime;
-      const now = Date.now();
-      let remaining = Math.max(0, Math.floor((endTime - now) / 1000));
-
-      clearInterval(countdownInterval);
-      startCountdown(remaining);
-    });
-
-    function startCountdown(seconds) {
-      clearInterval(countdownInterval);
-      let timeLeft = seconds;
-
-      updateTimerDisplay(timeLeft);
-
-      countdownInterval = setInterval(() => {
-        timeLeft--;
-        if (timeLeft <= 0) {
-          clearInterval(countdownInterval);
-          updateTimerDisplay(0);
-          return;
+    // === 4️⃣ Local Timer ===
+    function startLocalTimer() {
+      clearInterval(localTimer);
+      localTimer = setInterval(() => {
+        const now = Date.now();
+        const diff = Math.max(0, Math.floor((endTime - now) / 1000));
+        updateDisplay(diff);
+        if (diff <= 0) {
+          clearInterval(localTimer);
+          playAlarm();
         }
-        updateTimerDisplay(timeLeft);
       }, 1000);
     }
 
-    function updateTimerDisplay(seconds) {
-      const m = Math.floor(seconds / 60);
-      const s = seconds % 60;
-      document.getElementById("timer").textContent = `${m}:${s.toString().padStart(2, '0')}`;
+    // === 5️⃣ Alarm ===
+    function playAlarm() {
+      if (!alarmPlayed) {
+        alarmPlayed = true;
+        alarmSound.play().catch(() => console.log("Audio autoplay blocked"));
+        timerDisplay.classList.add('pulse-animation');
+        setTimeout(() => timerDisplay.classList.remove('pulse-animation'), 8000);
+      }
     }
 
-    // Tombol Reset
-    document.getElementById("resetBtn").addEventListener("click", () => {
-      const defaultTime = 900; // detik (15 menit)
+    // === 6️⃣ Firebase Sync ===
+    timerRef.on("value", (snapshot) => {
+      const data = snapshot.val();
+      if (!data) return;
+      endTime = data.endTime;
+      defaultTime = data.defaultTime;
+      alarmPlayed = false;
+      updateDisplay(Math.max(0, Math.floor((endTime - Date.now()) / 1000)));
+      startLocalTimer();
+    });
+
+    // === 7️⃣ Reset Timer ===
+    function resetTimer() {
+      resetBtn.classList.add('shake-animation');
+      setTimeout(() => resetBtn.classList.remove('shake-animation'), 1000);
       const newEndTime = Date.now() + defaultTime * 1000;
-      set(timerRef, { defaultTime, endTime: newEndTime });
+      timerRef.set({
+        defaultTime,
+        endTime: newEndTime
+      });
+    }
+
+    // === 8️⃣ Custom Time ===
+    function setCustomTime() {
+      const minutes = parseInt(minutesInput.value);
+      if (isNaN(minutes) || minutes < 1 || minutes > 120) {
+        alert('Please enter a valid number between 1 and 120');
+        return;
+      }
+      defaultTime = minutes * 60;
+      resetTimer();
+      setTimeBtn.innerHTML = '<i data-feather="check" class="inline mr-2"></i> Time Set!';
+      setTimeout(() => setTimeBtn.innerHTML = 'Set Time', 2000);
+    }
+
+    // === 9️⃣ Events ===
+    resetBtn.addEventListener('click', resetTimer);
+    settingsBtn.addEventListener('click', () => settingsPanel.classList.toggle('hidden'));
+    setTimeBtn.addEventListener('click', () => {
+      setCustomTime();
+      settingsPanel.classList.add('hidden');
+    });
+    minutesInput.addEventListener('keypress', (e) => {
+      if (e.key === 'Enter') setCustomTime();
+    });
+
+    // === 🔟 Init ===
+    feather.replace();
+    updateDisplay(defaultTime);
+
+    // Auto-start if Firebase already has data
+    timerRef.once("value").then(snapshot => {
+      if (!snapshot.exists()) {
+        resetTimer(); // start first time
+      }
     });
   </script>
 </body>
