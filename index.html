@@ -1,198 +1,194 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>TIMER GALANG RAMBU ARWANI ⏱️</title>
-
-  <!-- Tailwind & Feather -->
-  <script src="https://cdn.tailwindcss.com"></script>
-  <script src="https://cdn.jsdelivr.net/npm/feather-icons/dist/feather.min.js"></script>
-
-  <!-- Firebase -->
-  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-database-compat.js"></script>
-
-  <style>
-    @keyframes pulse {
-      0%, 100% { transform: scale(1); }
-      50% { transform: scale(1.05); }
-    }
-    .pulse-animation { animation: pulse 1.5s infinite; }
-
-    @keyframes shake {
-      0%, 100% { transform: translateX(0); }
-      25% { transform: translateX(-5px); }
-      75% { transform: translateX(5px); }
-    }
-    .shake-animation { animation: shake 0.5s 3; }
-
-    .timer-display {
-      font-family: 'Courier New', monospace;
-      letter-spacing: 2px;
-    }
-  </style>
-</head>
-
-<body class="bg-gray-100 dark:bg-gray-900 min-h-screen flex flex-col items-center justify-center p-4 transition-colors duration-300">
-  <div class="w-full max-w-md mx-auto">
-    <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-xl overflow-hidden transition-all duration-300">
-      
-      <!-- Header -->
-      <div class="bg-indigo-600 dark:bg-indigo-800 p-6 text-center">
-        <h1 class="text-2xl font-bold text-white">TIMER GALANG RAMBU ARWANI</h1>
-        <p class="text-indigo-100 mt-1">Shared real-time countdown</p>
-      </div>
-      
-      <!-- Timer Display -->
-      <div class="p-8 text-center">
-        <div id="timerDisplay" class="timer-display text-7xl font-bold text-gray-800 dark:text-white mb-6">15:00</div>
-
-        <!-- Controls -->
-        <div class="flex justify-center space-x-4 mb-8">
-          <button id="resetBtn" class="bg-gray-200 hover:bg-gray-300 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-800 dark:text-white px-6 py-3 rounded-full font-medium transition-all shadow-lg">
-            <i data-feather="refresh-cw" class="inline mr-2"></i> Reset
-          </button>
-          <button id="settingsBtn" class="bg-gray-200 hover:bg-gray-300 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-800 dark:text-white px-6 py-3 rounded-full font-medium transition-all shadow-lg">
-            <i data-feather="settings" class="inline mr-2"></i> Settings
-          </button>
-        </div>
-
-        <!-- Settings Panel -->
-        <div id="settingsPanel" class="bg-gray-50 dark:bg-gray-700 p-6 rounded-xl hidden">
-          <h3 class="text-lg font-semibold text-gray-800 dark:text-white mb-4">Timer Settings</h3>
-          <div class="flex items-center justify-between">
-            <label for="minutesInput" class="text-gray-700 dark:text-gray-300">Minutes:</label>
-            <input type="number" id="minutesInput" min="1" max="120" value="15" 
-              class="w-20 px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-800 text-gray-800 dark:text-white text-center">
-          </div>
-          <button id="setTimeBtn" class="mt-4 w-full bg-indigo-600 hover:bg-indigo-700 text-white py-2 rounded-md font-medium transition-all">
-            Set Time
-          </button>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <!-- Alarm Sound -->
-  <audio id="alarmSound" src="https://actions.google.com/sounds/v1/alarms/alarm_clock.ogg" preload="auto"></audio>
-
-  <script>
-    // === 1️⃣ Firebase Setup ===
-    const firebaseConfig = {
-      apiKey: "ISI_APIKEY_KAMU",
-      authDomain: "live-timer-819ec.firebaseapp.com",
-      databaseURL: "https://live-timer-819ec-default-rtdb.asia-southeast1.firebasedatabase.app",
-      projectId: "live-timer-819ec",
-      storageBucket: "live-timer-819ec.appspot.com",
-      messagingSenderId: "1025604126659",
-      appId: "1:1025604126659:web:2d5652951b24196a0f5f76"
-    };
-    firebase.initializeApp(firebaseConfig);
-    const db = firebase.database();
-    const timerRef = db.ref("sharedTimer");
-
-    // === 2️⃣ DOM Elements ===
-    const timerDisplay = document.getElementById('timerDisplay');
-    const resetBtn = document.getElementById('resetBtn');
-    const settingsBtn = document.getElementById('settingsBtn');
-    const settingsPanel = document.getElementById('settingsPanel');
-    const minutesInput = document.getElementById('minutesInput');
-    const setTimeBtn = document.getElementById('setTimeBtn');
-    const alarmSound = document.getElementById('alarmSound');
-
-    let defaultTime = 15 * 60;
-    let localTimer = null;
-    let endTime = null;
-    let alarmPlayed = false;
-
-    // === 3️⃣ Display Formatter ===
-    function updateDisplay(secondsLeft) {
-      const minutes = Math.floor(secondsLeft / 60);
-      const seconds = secondsLeft % 60;
-      timerDisplay.textContent = `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
-    }
-
-    // === 4️⃣ Local Timer ===
-    function startLocalTimer() {
-      clearInterval(localTimer);
-      localTimer = setInterval(() => {
-        const now = Date.now();
-        const diff = Math.max(0, Math.floor((endTime - now) / 1000));
-        updateDisplay(diff);
-        if (diff <= 0) {
-          clearInterval(localTimer);
-          playAlarm();
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Countdown Crusader ⏱️</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/feather-icons"></script>
+    <script src="https://cdn.jsdelivr.net/npm/feather-icons/dist/feather.min.js"></script>
+    <style>
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); }
         }
-      }, 1000);
-    }
+        .pulse-animation {
+            animation: pulse 1.5s infinite;
+        }
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-5px); }
+            75% { transform: translateX(5px); }
+        }
+        .shake-animation {
+            animation: shake 0.5s 3;
+        }
+        .timer-display {
+            font-family: 'Courier New', monospace;
+            letter-spacing: 2px;
+        }
+    </style>
+</head>
+<body class="bg-gray-100 dark:bg-gray-900 min-h-screen flex flex-col items-center justify-center p-4 transition-colors duration-300">
+    <div class="w-full max-w-md mx-auto">
+        <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-xl overflow-hidden transition-all duration-300">
+            <!-- Header -->
+            <div class="bg-indigo-600 dark:bg-indigo-800 p-6 text-center">
+                <h1 class="text-2xl font-bold text-white">Countdown Crusader ⏱️</h1>
+                <p class="text-indigo-100 mt-1">Your personal time manager</p>
+            </div>
+            
+            <!-- Timer Display -->
+            <div class="p-8 text-center">
+                <div id="timerDisplay" class="timer-display text-7xl font-bold text-gray-800 dark:text-white mb-6">
+                    15:00
+                </div>
+                <!-- Controls -->
+                <div class="flex justify-center space-x-4 mb-8">
+                    <button id="resetBtn" class="bg-gray-200 hover:bg-gray-300 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-800 dark:text-white px-6 py-3 rounded-full font-medium transition-all shadow-lg">
+                        <i data-feather="refresh-cw" class="inline mr-2"></i> Reset
+                    </button>
+                    <button id="settingsBtn" class="bg-gray-200 hover:bg-gray-300 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-800 dark:text-white px-6 py-3 rounded-full font-medium transition-all shadow-lg">
+                        <i data-feather="settings" class="inline mr-2"></i> Settings
+                    </button>
+                </div>
+                <!-- Settings (hidden by default) -->
+                <div id="settingsPanel" class="bg-gray-50 dark:bg-gray-700 p-6 rounded-xl hidden">
+<h3 class="text-lg font-semibold text-gray-800 dark:text-white mb-4">Timer Settings</h3>
+                    <div class="flex items-center justify-between">
+                        <label for="minutesInput" class="text-gray-700 dark:text-gray-300">Minutes:</label>
+                        <input type="number" id="minutesInput" min="1" max="120" value="15" 
+                            class="w-20 px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-800 text-gray-800 dark:text-white text-center">
+                    </div>
+                    <button id="setTimeBtn" class="mt-4 w-full bg-indigo-600 hover:bg-indigo-700 text-white py-2 rounded-md font-medium transition-all">
+                        Set Time
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
 
-    // === 5️⃣ Alarm ===
-    function playAlarm() {
-      if (!alarmPlayed) {
-        alarmPlayed = true;
-        alarmSound.play().catch(() => console.log("Audio autoplay blocked"));
-        timerDisplay.classList.add('pulse-animation');
-        setTimeout(() => timerDisplay.classList.remove('pulse-animation'), 8000);
-      }
-    }
-
-    // === 6️⃣ Firebase Sync ===
-    timerRef.on("value", (snapshot) => {
-      const data = snapshot.val();
-      if (!data) return;
-      endTime = data.endTime;
-      defaultTime = data.defaultTime;
-      alarmPlayed = false;
-      updateDisplay(Math.max(0, Math.floor((endTime - Date.now()) / 1000)));
-      startLocalTimer();
-    });
-
-    // === 7️⃣ Reset Timer ===
-    function resetTimer() {
-      resetBtn.classList.add('shake-animation');
-      setTimeout(() => resetBtn.classList.remove('shake-animation'), 1000);
-      const newEndTime = Date.now() + defaultTime * 1000;
-      timerRef.set({
-        defaultTime,
-        endTime: newEndTime
-      });
-    }
-
-    // === 8️⃣ Custom Time ===
-    function setCustomTime() {
-      const minutes = parseInt(minutesInput.value);
-      if (isNaN(minutes) || minutes < 1 || minutes > 120) {
-        alert('Please enter a valid number between 1 and 120');
-        return;
-      }
-      defaultTime = minutes * 60;
-      resetTimer();
-      setTimeBtn.innerHTML = '<i data-feather="check" class="inline mr-2"></i> Time Set!';
-      setTimeout(() => setTimeBtn.innerHTML = 'Set Time', 2000);
-    }
-
-    // === 9️⃣ Events ===
-    resetBtn.addEventListener('click', resetTimer);
-    settingsBtn.addEventListener('click', () => settingsPanel.classList.toggle('hidden'));
-    setTimeBtn.addEventListener('click', () => {
-      setCustomTime();
-      settingsPanel.classList.add('hidden');
-    });
-    minutesInput.addEventListener('keypress', (e) => {
-      if (e.key === 'Enter') setCustomTime();
-    });
-
-    // === 🔟 Init ===
-    feather.replace();
-    updateDisplay(defaultTime);
-
-    // Auto-start if Firebase already has data
-    timerRef.once("value").then(snapshot => {
-      if (!snapshot.exists()) {
-        resetTimer(); // start first time
-      }
-    });
-  </script>
+    <script>
+        // DOM Elements
+        const timerDisplay = document.getElementById('timerDisplay');
+        const resetBtn = document.getElementById('resetBtn');
+        const settingsBtn = document.getElementById('settingsBtn');
+        const settingsPanel = document.getElementById('settingsPanel');
+        const minutesInput = document.getElementById('minutesInput');
+        const setTimeBtn = document.getElementById('setTimeBtn');
+// Timer variables
+        let timeLeft = 15 * 60; // 15 minutes in seconds
+        let timerInterval;
+        let isRunning = true; // Set to true for auto start
+        let defaultTime = 15 * 60;
+// Update timer display
+        function updateDisplay() {
+            const minutes = Math.floor(timeLeft / 60);
+            const seconds = timeLeft % 60;
+            timerDisplay.textContent = `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+        }
+        
+        // Start timer
+        function startTimer() {
+            if (isRunning || timeLeft <= 0) return;
+            
+            isRunning = true;
+            startBtn.innerHTML = '<i data-feather="pause" class="inline mr-2"></i> Pause';
+            startBtn.classList.remove('bg-green-500', 'hover:bg-green-600');
+            startBtn.classList.add('bg-yellow-500', 'hover:bg-yellow-600');
+            timerDisplay.classList.add('text-indigo-600', 'dark:text-indigo-400');
+            
+            timerInterval = setInterval(() => {
+                timeLeft--;
+                updateDisplay();
+                
+                if (timeLeft <= 0) {
+                    clearInterval(timerInterval);
+                    isRunning = false;
+                    timerDisplay.classList.remove('text-indigo-600', 'dark:text-indigo-400', 'pulse-animation');
+                    timerDisplay.classList.add('text-red-500');
+// Play sound when timer reaches 0
+                    const audio = new Audio('https://assets.mixkit.co/sfx/preview/mixkit-alarm-digital-clock-beep-989.mp3');
+                    audio.play();
+                }
+            }, 1000);
+        }
+        
+        // Pause timer
+        function pauseTimer() {
+            clearInterval(timerInterval);
+            isRunning = false;
+            startBtn.innerHTML = '<i data-feather="play" class="inline mr-2"></i> Start';
+            startBtn.classList.remove('bg-yellow-500', 'hover:bg-yellow-600');
+            startBtn.classList.add('bg-green-500', 'hover:bg-green-600');
+            timerDisplay.classList.remove('text-indigo-600', 'dark:text-indigo-400');
+        }
+        // Reset timer
+        function resetTimer() {
+            clearInterval(timerInterval);
+            timeLeft = defaultTime;
+            updateDisplay();
+            timerDisplay.classList.remove('text-indigo-600', 'dark:text-indigo-400', 'text-red-500', 'pulse-animation');
+            
+            // Add shake animation to reset button
+            resetBtn.classList.add('shake-animation');
+            setTimeout(() => {
+                resetBtn.classList.remove('shake-animation');
+            }, 1500);
+            
+            // Start timer immediately after reset
+            timerInterval = setInterval(() => {
+                timeLeft--;
+                updateDisplay();
+                
+                if (timeLeft <= 0) {
+                    clearInterval(timerInterval);
+                    timerDisplay.classList.remove('text-indigo-600', 'dark:text-indigo-400', 'pulse-animation');
+                    timerDisplay.classList.add('text-red-500');
+                    
+                    // Play sound when timer reaches 0
+                    const audio = new Audio('https://assets.mixkit.co/sfx/preview/mixkit-alarm-digital-clock-beep-989.mp3');
+                    audio.play();
+}
+            }, 1000);
+        }
+// Set custom time
+        function setCustomTime() {
+            const minutes = parseInt(minutesInput.value);
+            if (isNaN(minutes) || minutes < 1 || minutes > 120) {
+                alert('Please enter a valid number between 1 and 120');
+                return;
+            }
+            
+            defaultTime = minutes * 60;
+            resetTimer();
+            
+            // Add visual feedback
+            setTimeBtn.innerHTML = '<i data-feather="check" class="inline mr-2"></i> Time Set!';
+            setTimeout(() => {
+                setTimeBtn.innerHTML = 'Set Time';
+            }, 2000);
+        }
+        
+        // Event listeners
+        resetBtn.addEventListener('click', resetTimer);
+        settingsBtn.addEventListener('click', () => {
+            settingsPanel.classList.toggle('hidden');
+        });
+        setTimeBtn.addEventListener('click', () => {
+            setCustomTime();
+            settingsPanel.classList.add('hidden');
+        });
+        // Initialize
+        updateDisplay();
+        feather.replace();
+        resetTimer(); // Start timer immediately with default time
+// Allow Enter key to set time
+        minutesInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                setCustomTime();
+            }
+        });
+    </script>
 </body>
 </html>
